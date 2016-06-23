@@ -1,0 +1,17 @@
+version: 1
+
+dn: dc=--DOM1--,dc=--DOM2--
+objectClass: top
+objectClass: domain
+dc: --DOM1--
+
+dn: ou=People,dc=--DOM1--,dc=--DOM2--
+objectClass: top
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Group,dc=--DOM1--,dc=--DOM2--
+objectClass: top
+objectClass: organizationalUnit
+ou: Group
+
