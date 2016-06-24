@@ -37,5 +37,5 @@ docker exec -ti ldap /usr/bin/ldapadd -D cn=admin,dc=mydomain,dc=site -w MySecre
 ## LDAP DB
 
   - You can stop/start the LDAP container without lose your LDAP database
-  - if you delete (`docker rm ldap`) this container, you can't restart and reuse your configured LDAP database, so please remove the container carefully :( (I don't know the reason yet)
+  - please make a backup (slapcat > /var/lib/ldap/ldap-dump.ldif) before you delete (`docker rm -v ldap`) the ldap container. I've tested, you can reuse an old LDAP db in a new container generally, but I don't take responsibility if you can't reuse your DB. Sorry :(
 
