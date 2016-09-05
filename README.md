@@ -33,6 +33,13 @@ After the first start, You have to import the base tree (Domain, People, Group t
 docker exec -ti ldap /usr/bin/ldapadd -D cn=admin,dc=mydomain,dc=site -w MySecret -f /opt/ldap-base.ldif
 ```
 
+OR in the container:
+
+```
+ldapadd -D cn=admin,dc=$( echo $DOMAIN | cut -f1 -d'.'),dc=$( echo $DOMAIN | cut -f2 -d'.') -w $ADMINPASS -f /opt/ldap-base.ldif
+```
+
+
 
 ## LDAP DB
 
