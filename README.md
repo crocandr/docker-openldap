@@ -12,13 +12,13 @@ Good Luck! :)
 ## Build
 
 ```
-docker build -t sandras/openldap .
+docker build -t croc/openldap .
 ```
 
 ## Run
 
 ```
-docker run -tid --name=ldap -p 389:389 -e DOMAIN=mydomain.site -e ADMINPASS=MySecret -v /srv/ldap/extra/:/etc/ldap/schema/extra/ -v /srv/ldap/data/:/var/lib/ldap sandras/openldap /opt/start.sh
+docker run -tid --name=ldap -p 389:389 -e DOMAIN=mydomain.site -e ADMINPASS=MySecret -v /srv/ldap/extra/:/etc/ldap/schema/extra/ -v /srv/ldap/data/:/var/lib/ldap croc/openldap /opt/start.sh
 ```
 
   - `DOMAIN=mydomain.site` - is your domain name (example: dc=mydomain,dc=site)
@@ -26,6 +26,7 @@ docker run -tid --name=ldap -p 389:389 -e DOMAIN=mydomain.site -e ADMINPASS=MySe
   - the `/srv/ldap/extra` is a directory on your docker host for your custom schema files
   - the `/srv/ldap/data/` folder stores your LDAP database and a backup copy of the `slapd.conf`
   - the container start script generates the LDAP config automatically after the start
+  - if You define the `-e DEBUGLEVEL=9` parameter, the slapd daemon start verbose output in the container, default is 0 (no debugging)
 
 After the first start, You have to import the base tree (Domain, People, Group tree) into the LDAP db with this command:
 
@@ -38,8 +39,6 @@ OR in the container:
 ```
 ldapadd -D cn=admin,dc=$( echo $DOMAIN | cut -f1 -d'.'),dc=$( echo $DOMAIN | cut -f2 -d'.') -w $ADMINPASS -f /opt/ldap-base.ldif
 ```
-
-
 
 ## LDAP DB
 

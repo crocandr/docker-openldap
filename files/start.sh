@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -z $DEBUGLEVEL ]
+then
+  DL=0
+else
+  DL=$DEBUGLEVEL
+fi
+
 if [ -z "$DOMAIN" ]
 then
   echo "no DOMAIN defined! (example: mydomain.com )"
@@ -26,7 +33,7 @@ sed -i s@--DOM2--@$DOM2@g $BASEFILE
 
 # start ldap
 echo "Starting LDAP service..."
-slapd -d 9
+slapd -d $DL 
 
 #slapadd -F /etc/ldap/ldap-config -l /opt/01-ldap-base.ldif
 #slapd -F /etc/ldap/ldap-config
