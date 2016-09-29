@@ -4,7 +4,7 @@ This LDAP container implementation contains the default OpenLDAP schemas and the
 
 This is not the best solution, but works :)
 
-You can manage this OpenLDAP from Windows, Linux and OSX with ApacheDS Studio ( http://directory.apache.org/studio/ ), and from the CLI, of course :)
+You can manage this OpenLDAP from Windows, Linux and OSX with ApacheDS Studio ( http://directory.apache.org/studio/ ), and from the CLI and with webmin too, of course :)
 
 Good Luck! :)
 
@@ -28,36 +28,41 @@ docker run -tid --name=ldap -p 389:389 -e DOMAIN=mydomain.site -e ADMINPASS=MySe
   - the container start script generates the LDAP config automatically after the start
   - if You define the `-e DEBUGLEVEL=9` parameter, the slapd daemon start verbose output in the container, default is 0 (no debugging)
 
-After the first start, You have to import the base tree (Domain, People, Group tree) into the LDAP db with this command:
-
-```
-docker exec -ti ldap /usr/bin/ldapadd -D cn=admin,dc=mydomain,dc=site -w MySecret -f /opt/ldap-base.ldif
-```
-
-OR in the container:
-
-```
-ldapadd -D cn=admin,dc=$( echo $DOMAIN | cut -f1 -d'.'),dc=$( echo $DOMAIN | cut -f2 -d'.') -w $ADMINPASS -f /opt/ldap-base.ldif
-```
+The LDAP containers creates the basic LDAP tree automatically at the first start.
+And creates a backup into the LDAP folder from the LDAP tree at every start. The backup file format is: `ldap-autobackup-<date>-<time>.ldif`. Please, do not overwrite or change these backup files!
 
 ## LDAP DB
 
   - You can stop/start the LDAP container without lose your LDAP database
   - please make a backup (`slapcat > /var/lib/ldap/ldap-dump.ldif`) before you delete (`docker rm -v ldap`) the ldap container. I've tested, you can reuse an old LDAP db in a new container generally, but I don't take responsibility if you can't reuse your DB. Sorry :(
 
-## Export & Import
+## Container Update
 
-You can export your full ldap:
+If you stop and delete the ldap container, and run a new one (= container update), the container tries to recover the full LDAP tree from the latest autobackup file.
+If the recover fails, please try remove empty or damaged autobackup files from the data folder of your ldap container.
+
+## Export & Import & Backup
+
+You can export your full ldap in the container:
 
 ```
-docker slapcat > /tmp/ldap-dump.ldif
+slapcat > /tmp/ldap-dump.ldif
 ```
 
-You can import your old dump:
+You can import your old dump in the container:
 
 ```
-slapadd -c -v -l /mnt/data/ldap-dump.ldif
+slapadd -c -v -l /tmp/ldap-dump.ldif
 ```
 
-But if you don't like to overwrite the "admin" user password (and other attributes), please delete the admin user block from the ldif file before the import.
+But if you don't like to overwrite the "admin" user password (and other attributes), please delete the admin user block from the ldif file before importing.
+
+
+You can create a backup from the LDAP tree on your docker host at any time.
+
+Example:
+
+```
+docker exec -ti ldap slapcat > /myfolder/ldap-backup-$( date +"%Y%m%d-%H%M ).ldif
+```
 

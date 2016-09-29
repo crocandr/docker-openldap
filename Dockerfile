@@ -11,6 +11,7 @@ COPY files/ldap-config.sh /opt/ldap-config.sh
 RUN chmod 755 /opt/ldap-config.sh
 
 COPY files/ldap-base.ldif /opt/ldap-base.ldif
+COPY files/ldap-base2.ldif /opt/ldap-base2.ldif
 
 COPY files/start.sh /opt/start.sh
 RUN chmod 755 /opt/start.sh

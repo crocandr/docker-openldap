@@ -1,33 +1,41 @@
 #!/bin/bash
 
-if [ ! -e /etc/ldap/slapd.conf ] && [ -e /var/lib/ldap/slapd.conf ]
+LOCKFILE="/var/lib/ldap/configured.lock"
+
+if [ -e /etc/ldap/slapd.conf ] && [ -e $LOCKFILE ]                          
+then                                                                                            
+  echo "LDAP is already configured."                                                            
+  exit 0                                                                                        
+fi                                                                                              
+
+if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
 then
-  # recovery old config
-  cp -f /var/lib/ldap/slapd.conf /etc/ldap/slapd.conf
+  echo "Creating new empty database..."
 fi
 
-if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e /var/lib/ldap/slapd.conf ]
+if [ ! -e /etc/ldap/slapd.conf ] && [ -e $LOCKFILE ]
 then
-  # unlock ldap for reconfig
-  rm -f /var/lib/ldap/configured.lock
-fi
-
-if [ -e /var/lib/ldap/configured.lock ]
-then
-  echo "LDAP is already configured."
-  exit 0
+  echo "LDAP is already configured, but config file does not exists. Recovery in progress..."
+#  # backup old database files
+  for of in /var/lib/ldap/*mdb
+  do
+    mv $of $of.bckp
+  done
+  # search for old backup
+  lf=$( ls -1t /var/lib/ldap/ldap-autobackup-*.ldif | head -n1 )
+  if [ ! -z "$lf" ]
+  then
+    echo "Found a backup file: $lf"
+    recovery=1
+  fi
 fi
 
 # CLEAN
-#if [ ! -e /etc/ldap/slapd.conf ]
-#if [ ! -e /var/lib/ldap/configured.lock ]
-#then
 rm -rf /etc/ldap/slapd.d/*
-rm -rf /var/lib/ldap/*
+#rm -rf /var/lib/ldap/*
+rm -f $LOCKFILE
 chown -R openldap:openldap /var/lib/ldap
 chown -R openldap:openldap /etc/ldap/slapd.d
-#fi
-
 
 echo "" > /opt/slapd.conf
 
@@ -70,12 +78,33 @@ echo directory /var/lib/ldap >> /opt/slapd.conf
 
 cp -f /opt/slapd.conf /etc/ldap/slapd.conf
 
+# import base structure
+slapadd -c -v -l /opt/ldap-base2.ldif 
+
 slaptest -u
 if [ $? -eq 0 ]
 then
-  cp -f /etc/ldap/slapd.conf /var/lib/ldap
-  date > /var/lib/ldap/configured.lock
+  # note
+  date > $LOCKFILE 
 else
   echo "ERROR in LDAP config!"
   exit 1 
 fi
+
+# recovery
+# if the file exists and size is not zero
+if [ ! -z $recovery ]
+then
+  if [ -s "$lf" ]
+  then
+    echo "Recoverying last backup from $lf file ..."
+    slapadd -c -v -l $lf
+    if [ $? -eq 0 ]
+    then
+      echo "LDAP DB recovered."
+    fi
+  else
+    echo "Recover failed. Backup file ( $lf ) not usable. :("
+  fi
+fi
+

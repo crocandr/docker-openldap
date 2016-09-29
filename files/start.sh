@@ -23,13 +23,17 @@ fi
 DOM1=$( echo $DOMAIN | cut -f1 -d'.' )
 DOM2=$( echo $DOMAIN | cut -f2 -d'.' )
 
-BASEFILE="/opt/ldap-base.ldif"
+#BASEFILE="/opt/ldap-base.ldif"
+BASEFILE="/opt/ldap-base2.ldif"
 sed -i s@--DOMAIN--@$DOMAIN@g $BASEFILE 
 sed -i s@--DOM1--@$DOM1@g $BASEFILE
 sed -i s@--DOM2--@$DOM2@g $BASEFILE 
 
 # config ldap
 /opt/ldap-config.sh
+
+# backup
+slapcat > /var/lib/ldap/ldap-autobackup-$( date +"%Y%m%d-%H%M%S" ).ldif
 
 # start ldap
 echo "Starting LDAP service..."
