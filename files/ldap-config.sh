@@ -8,10 +8,10 @@ then
   exit 0                                                                                        
 fi                                                                                              
 
-if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
-then
-  echo "Creating new empty database..."
-fi
+#if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
+#then
+#  echo "Creating new empty database..."
+#fi
 
 if [ ! -e /etc/ldap/slapd.conf ] && [ -e $LOCKFILE ]
 then
@@ -22,7 +22,17 @@ then
     mv $of $of.bckp
   done
   # search for old backup
-  lf=$( ls -1t /var/lib/ldap/ldap-autobackup-*.ldif | head -n1 )
+  #lf=$( ls -1t /var/lib/ldap/ldap-autobackup-*.ldif | head -n1 )
+  VALID=0
+  for i in $( ls -1t /var/lib/ldap/ldap-autobackup-*.ldif )
+  do
+    MAIL_WITHAT=$( grep -iR mail:.*@.* $i | wc -l)
+    MAIL_ALL=$( grep -iR mail:.* $i | wc -l )
+    [ $VALID -eq 1 ] && { continue; }
+    [ $MAIL_WITHAT -eq $MAIL_ALL ] && { echo -e "OK\t$i"; DUMP=$i; VALID=1; } || { echo -e "INVALID\t$i"; rm -f $i; }
+  done
+  #echo "---$DUMP---"
+  lf=$DUMP
   if [ ! -z "$lf" ]
   then
     echo "Found a backup file: $lf"
@@ -79,7 +89,12 @@ echo directory /var/lib/ldap >> /opt/slapd.conf
 cp -f /opt/slapd.conf /etc/ldap/slapd.conf
 
 # import base structure
-slapadd -c -v -l /opt/ldap-base2.ldif 
+#slapadd -c -v -l /opt/ldap-base2.ldif 
+if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
+then
+  echo "Creating new empty database..."
+  slapadd -c -v -l /opt/ldap-base2.ldif
+fi
 
 slaptest -u
 if [ $? -eq 0 ]
