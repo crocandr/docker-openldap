@@ -8,10 +8,12 @@ then
   exit 0                                                                                        
 fi                                                                                              
 
-#if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
-#then
-#  echo "Creating new empty database..."
-#fi
+if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
+then
+  CREATE_NEW_DB=true
+else
+  CREATE_NEW_DB=false
+fi
 
 if [ ! -e /etc/ldap/slapd.conf ] && [ -e $LOCKFILE ]
 then
@@ -90,7 +92,7 @@ cp -f /opt/slapd.conf /etc/ldap/slapd.conf
 
 # import base structure
 #slapadd -c -v -l /opt/ldap-base2.ldif 
-if [ ! -e /etc/ldap/slapd.conf ] && [ ! -e $LOCKFILE ]
+if [ $CREATE_NEW_DB == true ]
 then
   echo "Creating new empty database..."
   slapadd -c -v -l /opt/ldap-base2.ldif
