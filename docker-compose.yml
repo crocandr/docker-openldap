@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  openldap:
+    image: croc/openldap
+    environment:
+      - DOMAIN=test.lan
+      - ADMINPASS=X2mQ291v
+    volumes:
+      - './openldap/data/:/var/lib/ldap'
+      - './openldap/backup:/backup'
+    ports:
+      - 389:389
+    restart: unless-stopped 
+
+  webmin:
+    image: croc/webmin
+    volumes:
+      - './webmin/backup:/backup'
+    depends_on:
+      - openldap
+    ports:
+      - 10000:10000
+    tty: true
+    restart: unless-stopped 
